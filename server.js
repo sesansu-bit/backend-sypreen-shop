@@ -42,7 +42,7 @@ const filePath = path.join(__dirname, 'items.json')
 
 app.use(cors({
   origin: [
-    "http://localhost:5173",
+    "http://localhost:5174",
     "https://sypreen-shopping-web.vercel.app"
   ],
   credentials: true,
@@ -57,7 +57,7 @@ const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
 
 
-const createAccessToken = (user) =>
+const createAccessToken =(user) =>
   jwt.sign({ id: user._id }, process.env.ACCESS_TOKEN_SECRET, { expiresIn: "15m" });
 
 const createRefreshToken = (user) =>
@@ -936,5 +936,5 @@ app.post("/wishliststore", verifyAccessToken, async (req, res) => {
 
 
 
-const PORT=2000;
+const PORT=2001;
 app.listen(PORT, () => console.log(`Server running `));
