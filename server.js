@@ -42,7 +42,7 @@ const filePath = path.join(__dirname, 'items.json')
 app.use(cors({
   origin: [
     "http://localhost:5173",
-    "https://sypreen-shop.onrender.com"
+    "https://sypreen-shopping-web.vercel.app"
   ],
   credentials: true,
 }));
