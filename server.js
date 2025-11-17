@@ -40,11 +40,12 @@ const __dirname = path.dirname(__filename);
 const filePath = path.join(__dirname, 'items.json')
 
 app.use(cors({
-  origin: "http://localhost:5173", // frontend URL
-  credentials: true               // cookies allow 
+  origin: [
+    "http://localhost:5173",
+    "https://sypreen-shop.onrender.com"
+  ],
+  credentials: true,
 }));
-
-
 
 mongoose.connect(process.env.MONGO_URI, { dbName: "userdata" })
   .then(() => console.log("MongoDB connected"))
