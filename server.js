@@ -15,6 +15,7 @@ import helmet from "helmet";
 import rateLimit from "express-rate-limit";
 import { body, validationResult } from "express-validator";
 import morgan from "morgan";
+import { OAuth2Client } from "google-auth-library";
 import Razorpay from "razorpay";
 import fs from "fs/promises";
 import path from "path";
@@ -41,7 +42,7 @@ const filePath = path.join(__dirname, 'items.json')
 
 app.use(cors({
   origin: [
-    "http://localhost:5174",
+    "http://localhost:5173",
     "https://sypreen-shopping-web.vercel.app"
   ],
   credentials: true,
@@ -50,6 +51,7 @@ app.use(cors({
 mongoose.connect(process.env.MONGO_URI, { dbName: "userdata" })
   .then(() => console.log("MongoDB connected"))
 
+const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
 
 
@@ -544,6 +546,57 @@ app.post(
 
 
 
+
+
+
+// ROUTE: Google login
+app.post("/api/auth/google", async (req, res) => {
+  const { tokenId } = req.body; // frontend se id_token
+  try {
+    const ticket = await client.verifyIdToken({
+      idToken: tokenId,
+      audience: process.env.GOOGLE_CLIENT_ID,
+    });
+    const payload = ticket.getPayload();
+    const { email, name, sub: googleId } = payload;
+
+    let user = await User.findOne({ email });
+    if (!user) {
+    user = new User({ name, email, googleId });
+      await user.save();
+    }
+
+    const accessToken = createAccessToken(user);
+    const refreshToken = createRefreshToken(user);
+
+    // save refresh token in DB
+    user.refreshToken = refreshToken;
+    await user.save();
+
+    // send tokens in httpOnly cookies
+    res
+      .cookie("accessToken", accessToken, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        maxAge: 15 * 60 * 1000,
+      })
+      .cookie("refreshToken", refreshToken, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        maxAge: 7 * 24 * 60 * 60 * 1000,
+      })
+      .status(200)
+      .json({ message: "Google login successful🎉", user: { name, email } });
+  } catch (err) {
+    console.log(err);
+    res.status(400).json({ message: "Google login failed" });
+  }
+});
+
+
+
+
+
 const razorpay = new Razorpay({
   key_id: process.env.RAZORPAY_KEY_ID,
   key_secret: process.env.RAZORPAY_KEY_SECRET,
@@ -883,5 +936,5 @@ app.post("/wishliststore", verifyAccessToken, async (req, res) => {
 
 
 
-const PORT=2001;
+const PORT=2000;
 app.listen(PORT, () => console.log(`Server running `));
