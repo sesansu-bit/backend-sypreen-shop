@@ -39,6 +39,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const filePath = path.join(__dirname, 'items.json')
 
+
 app.use(cors({
   origin: [
     "http://localhost:5173",
@@ -50,16 +51,17 @@ app.use(cors({
 mongoose.connect(process.env.MONGO_URI, { dbName: "userdata" })
   .then(() => console.log("MongoDB connected"))
 
+const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
 
 
 
 
 const createAccessToken = (user) =>
-  jwt.sign({ id: user._id, email: user.email }, process.env.ACCESS_TOKEN_SECRET, { expiresIn: "15m" });
+  jwt.sign({ id: user._id }, process.env.ACCESS_TOKEN_SECRET, { expiresIn: "15m" });
 
 const createRefreshToken = (user) =>
-  jwt.sign({ id: user._id, email: user.email }, process.env.REFRESH_TOKEN_SECRET, { expiresIn: "30d" });
+  jwt.sign({ id: user._id }, process.env.REFRESH_TOKEN_SECRET, { expiresIn: "30d" });
 
 const accessCookieOptions = {
   httpOnly: true,
@@ -163,8 +165,9 @@ app.post("/signup", async (req, res) => {
     const user = await User.create({ name, email, password: hashed });
 
   
-   const accessToken = createAccessToken({ id: user._id });
-    const refreshToken = createRefreshToken({ id: user._id });
+ const accessToken = createAccessToken(user);
+const refreshToken = createRefreshToken(user);
+
     user.refreshToken = refreshToken;
     await user.save();
 
@@ -217,8 +220,9 @@ app.post("/login", async (req, res) => {
     }
 
     // Generate tokens
-    const accessToken = createAccessToken({ id: user._id });
-    const refreshToken = createRefreshToken({ id: user._id });
+   const accessToken = createAccessToken(user);
+const refreshToken = createRefreshToken(user);
+
 
     // Save refresh token in DB
     user.refreshToken = refreshToken;
@@ -543,6 +547,51 @@ app.post(
 
 
 
+
+
+// ROUTE: Google login
+app.post("/api/auth/google", async (req, res) => {
+  const { tokenId } = req.body; // frontend se id_token
+  try {
+    const ticket = await client.verifyIdToken({
+      idToken: tokenId,
+      audience: process.env.GOOGLE_CLIENT_ID,
+    });
+    const payload = ticket.getPayload();
+    const { email, name, sub: googleId } = payload;
+
+    let user = await User.findOne({ email });
+    if (!user) {
+    user = new User({ name, email, googleId });
+      await user.save();
+    }
+
+    const accessToken = createAccessToken(user);
+    const refreshToken = createRefreshToken(user);
+
+    // save refresh token in DB
+    user.refreshToken = refreshToken;
+    await user.save();
+
+    // send tokens in httpOnly cookies
+    res
+      .cookie("accessToken", accessToken, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        maxAge: 15 * 60 * 1000,
+      })
+      .cookie("refreshToken", refreshToken, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        maxAge: 7 * 24 * 60 * 60 * 1000,
+      })
+      .status(200)
+      .json({ message: "Google login successful🎉", user: { name, email } });
+  } catch (err) {
+    console.log(err);
+    res.status(400).json({ message: "Google login failed" });
+  }
+});
 
 
 
