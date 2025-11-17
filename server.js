@@ -57,25 +57,26 @@ const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
 
 
-const createAccessToken =(user) =>
-  jwt.sign({ id: user._id }, process.env.ACCESS_TOKEN_SECRET, { expiresIn: "15m" });
+const createAccessToken = (user) =>
+  jwt.sign({ id: user._id, email: user.email }, process.env.ACCESS_TOKEN_SECRET, { expiresIn: "15m" });
 
 const createRefreshToken = (user) =>
-  jwt.sign({ id: user._id }, process.env.REFRESH_TOKEN_SECRET, { expiresIn: "30d" });
+  jwt.sign({ id: user._id, email: user.email }, process.env.REFRESH_TOKEN_SECRET, { expiresIn: "30d" });
 
 const accessCookieOptions = {
   httpOnly: true,
-  secure: process.env.NODE_ENV === "production",
-  sameSite: "lax",
+  secure: true,
+  sameSite: "none",
   maxAge: 15 * 60 * 1000,
 };
 
 const refreshCookieOptions = {
   httpOnly: true,
-  secure: process.env.NODE_ENV === "production",
-  sameSite: "lax",
+  secure: true,
+  sameSite: "none",
   maxAge: 30 * 24 * 60 * 60 * 1000,
 };
+
 
 
 
@@ -409,8 +410,8 @@ const TOKEN_TTL_MS = 10 * 60 * 1000;
 
 // -------------------- ✅ Rate Limiting --------------------
 const otpLimiter = rateLimit({
-  windowMs: 5 * 60 * 1000,
-  max: 5,
+  windowMs: 20 * 60 * 1000,
+  max: 20,
   message: { ok: false, message: "Too many OTP requests, try later" },
 });
 
@@ -436,7 +437,7 @@ app.post(
       await transporter.sendMail({
         from: process.env.FROM_EMAIL,
         to: email,
-        subject: "OTP for Password Reset",
+        subject: "Password Reset OTP",
         text: `Your OTP is ${otp}. Valid for 5 minutes.`,
         html: `<p>Your OTP is <b>${otp}</b>. Valid for 5 minutes.</p>`,
       });
