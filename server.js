@@ -39,14 +39,24 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const filePath = path.join(__dirname, 'items.json')
 
+const allowedOrigins = [
+  "http://localhost:5173",
+  "https://sypreen-shopping-web.vercel.app"
+];
 
-app.use(cors({
-  origin: [
-    "http://localhost:5173",
-    "https://sypreen-shopping-web.vercel.app"
-  ],
-  credentials: true,
-}));
+app.use((req, res, next) => {
+  const origin = req.headers.origin;
+  if (allowedOrigins.includes(origin)) {
+    res.header("Access-Control-Allow-Origin", origin);
+  }
+  res.header("Access-Control-Allow-Credentials", "true");
+  res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, Authorization");
+  res.header("Access-Control-Allow-Methods", "GET,POST,PUT,PATCH,DELETE,OPTIONS");
+  // If it's preflight request, end early
+  if (req.method === "OPTIONS") return res.sendStatus(200);
+  next();
+});
+
 
 mongoose.connect(process.env.MONGO_URI, { dbName: "userdata" })
   .then(() => console.log("MongoDB connected"))
