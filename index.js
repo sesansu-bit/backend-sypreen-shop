@@ -47,10 +47,7 @@ app.use(cors({
   ],
   credentials: true,
 }));
-app.use(cors({
-  origin: true,
-  credentials: true,
-}));
+
 
 mongoose.connect(process.env.MONGO_URI, { dbName: "userdata" })
   .then(() => console.log("MongoDB connected"))
@@ -69,15 +66,15 @@ const createRefreshToken = (user) =>
 
 const accessCookieOptions = {
   httpOnly: true,
-  secure: process.env.NODE_ENV === "production",
-  sameSite: "none",
+  secure:true,
+  sameSite: "lax",
   maxAge: 15 * 60 * 1000,
 };
 
 const refreshCookieOptions = {
   httpOnly: true,
- secure: process.env.NODE_ENV === "production",
-   sameSite: "none",
+ secure: true,
+   sameSite: "lax",
   maxAge: 30 * 24 * 60 * 60 * 1000,
 };
 
