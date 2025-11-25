@@ -21,7 +21,6 @@ import fs from "fs/promises";
 import path from "path";
 import { fileURLToPath } from "url";
 import { Product } from "./models/User.js";
- import chokidar from "chokidar";
 
 
 
@@ -68,14 +67,14 @@ const createRefreshToken = (user) =>
 const accessCookieOptions = {
   httpOnly: true,
   secure:true,
-  sameSite: "lax",
+  sameSite: "none",
   maxAge: 15 * 60 * 1000,
 };
 
 const refreshCookieOptions = {
   httpOnly: true,
  secure: true,
-   sameSite: "lax",
+   sameSite: "nonr",
   maxAge: 30 * 24 * 60 * 60 * 1000,
 };
 
