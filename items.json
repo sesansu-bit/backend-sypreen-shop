@@ -1559,7 +1559,8 @@
     "count": "45k"
   },
   "category": "luggage"
-},
+}
+,
  { "id": "300", "image": "https://i.pinimg.com/espresso1.jpg", "company": "Black Roasters", "original_price": 320, "return_period": 14, "delivery_date": "16 January 2026", "rating": { "stars": 4.6, "count": "12k" }, "category": "Espresso" },
   { "id": "301", "image": "https://i.pinimg.com/espresso2.jpg", "company": "Urban Bean", "original_price": 345, "return_period": 14, "delivery_date": "16 January 2026", "rating": { "stars": 4.4, "count": "9k" }, "category": "Espresso" },
   { "id": "302", "image": "https://i.pinimg.com/espresso3.jpg", "company": "Copper Coffee Co.", "original_price": 399, "return_period": 14, "delivery_date": "16 January 2026", "rating": { "stars": 4.7, "count": "18k" }, "category": "Espresso" },

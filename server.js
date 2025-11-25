@@ -21,7 +21,8 @@ import fs from "fs/promises";
 import path from "path";
 import { fileURLToPath } from "url";
 import { Product } from "./models/User.js";
- 
+ import chokidar from "chokidar";
+
 
 
 
