@@ -68,6 +68,7 @@ const accessCookieOptions = {
   httpOnly: true,
   secure:true,
 sameSite: "None",
+   path: "/", 
   maxAge: 15 * 60 * 1000,
 };
 
@@ -75,6 +76,7 @@ const refreshCookieOptions = {
   httpOnly: true,
  secure: true,
    sameSite: "None",
+      path: "/", 
   maxAge: 30 * 24 * 60 * 60 * 1000,
 };
 
@@ -553,42 +555,46 @@ app.post(
 
 // ROUTE: Google login
 app.post("/api/auth/google", async (req, res) => {
-  const { tokenId } = req.body; // frontend se id_token
+  const { tokenId } = req.body;
+
   try {
     const ticket = await client.verifyIdToken({
       idToken: tokenId,
       audience: process.env.GOOGLE_CLIENT_ID,
     });
+
     const payload = ticket.getPayload();
     const { email, name, sub: googleId } = payload;
 
     let user = await User.findOne({ email });
     if (!user) {
-    user = new User({ name, email, googleId });
-      await user.save();
+      user = await User.create({ name, email, googleId });
     }
 
     const accessToken = createAccessToken(user);
     const refreshToken = createRefreshToken(user);
 
-    // save refresh token in DB
     user.refreshToken = refreshToken;
     await user.save();
 
-    // send tokens in httpOnly cookies
     res
       .cookie("accessToken", accessToken, {
         httpOnly: true,
-        secure: process.env.NODE_ENV === "production",
+        secure: true,
+        sameSite: "None",
+        path: "/",
         maxAge: 15 * 60 * 1000,
       })
       .cookie("refreshToken", refreshToken, {
         httpOnly: true,
-        secure: process.env.NODE_ENV === "production",
-        maxAge: 7 * 24 * 60 * 60 * 1000,
+        secure: true,
+        sameSite: "None",
+        path: "/",
+        maxAge: 30 * 24 * 60 * 60 * 1000,
       })
       .status(200)
       .json({ message: "Google login successful🎉", user: { name, email } });
+
   } catch (err) {
     console.log(err);
     res.status(400).json({ message: "Google login failed" });
